@@ -1,0 +1,25 @@
+Detailed Statistics for RL Experiments
+=====================================
+
+
+pursuer_0:
+  Mean: 33.6052
+  Std: 26.9110
+  Min: -3.7882
+  Max: 119.5843
+  Median: 35.2760
+  Q1: 16.3165
+  Q3: 55.3347
+  Skewness: 0.7772
+  Kurtosis: 0.2984
+
+pursuer_1:
+  Mean: -69.5244
+  Std: 23.1896
+  Min: -97.3824
+  Max: 5.9754
+  Median: -72.8898
+  Q1: -91.4809
+  Q3: -54.0503
+  Skewness: 0.8716
+  Kurtosis: 0.2080
