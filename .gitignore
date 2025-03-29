@@ -25,4 +25,9 @@ build/
 .ipynb_checkpoints
 
 # Logs
-*.log 
+*.log
+
+# Trained models and checkpoints
+models/
+*.zip
+*.npz 
