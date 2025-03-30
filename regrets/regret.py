@@ -126,9 +126,9 @@ class BaselineRegret(Regret):
         # Store baseline reward for this agent
         self.agent_rewards[agent_id].append(baseline_reward)
         
-        # Update cumulative reward for this agent
+        # Update cumulative reward for this agent with actual reward
         agent_idx = int(agent_id.split('_')[1])
-        self.cumulative_agent_rewards[agent_idx] += baseline_reward
+        self.cumulative_agent_rewards[agent_idx] += agent_reward
         
         # Update timestep only once per environment step
         if agent_id == f"pursuer_{self.n_agents - 1}":  # Last agent in the step

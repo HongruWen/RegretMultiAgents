@@ -245,7 +245,7 @@ class RLPolicyBaseline(BaseBaseline):
         other_agents_states: Optional[List[np.ndarray]] = None
     ) -> float:
         """
-        Compute the reward for a baseline action using the Waterworld environment.
+        Compute the reward for a baseline action using the model's value function.
         
         Args:
             action (np.ndarray): Action to evaluate
@@ -253,26 +253,26 @@ class RLPolicyBaseline(BaseBaseline):
             other_agents_states (Optional[List[np.ndarray]]): States of other agents
             
         Returns:
-            float: Reward for the baseline action
+            float: Expected reward for the action in this state
         """
         if self.model is None:
             raise ValueError("Model not initialized. Call train() first.")
             
-        # Get the current agent from the environment
-        current_agent = self.env.env.env.agents[0]
+        # Convert state to tensor
+        state_tensor = torch.FloatTensor(state).unsqueeze(0)
         
-        # Store the current environment state
-        current_state = self.env.env.env.state()
-        
-        # Apply the action and get the reward
-        self.env.env.env.step(action)
-        reward = self.env.env.env.rewards[current_agent]
-        
-        # Restore the environment state
-        self.env.env.env.reset()
-        self.env.env.env.state(current_state)
-        
-        return reward
+        # Use the model's value function to estimate the reward
+        # For PPO, we can use the value function directly
+        if isinstance(self.model, PPO):
+            with torch.no_grad():
+                value = self.model.policy.predict_values(state_tensor)
+            return float(value.squeeze().cpu().numpy())
+        else:
+            # For other algorithms, use the action's Q-value
+            action_tensor = torch.FloatTensor(action).unsqueeze(0)
+            with torch.no_grad():
+                value = self.model.critic.forward(state_tensor, action_tensor)
+            return float(value.squeeze().cpu().numpy())
     
     def get_expected_reward(
         self,
