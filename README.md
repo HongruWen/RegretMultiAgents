@@ -15,6 +15,47 @@ Each agent has:
 - Sensor-based observation space
 - Reward system based on interactions with food and poison
 
+## LLM Agent
+
+The project includes an LLM-based agent that uses the Hugging Face Inference API to make decisions in the Waterworld environment. The agent processes observations and generates continuous actions using language models.
+
+### Setup
+
+1. Install the required packages:
+```bash
+pip install -r requirements.txt
+```
+
+2. Set up your Hugging Face API token:
+- Get your API token from https://huggingface.co/settings/tokens
+- Set the environment variable:
+```bash
+# PowerShell
+$env:HUGGINGFACEHUB_API_TOKEN="your_token_here"
+
+# Command Prompt
+set HUGGINGFACEHUB_API_TOKEN=your_token_here
+
+# Linux/Mac
+export HUGGINGFACEHUB_API_TOKEN=your_token_here
+```
+
+### Running the LLM Agent
+
+To run a simulation with the LLM agent:
+
+```bash
+python models/llm_agents/run_llm_agent.py
+```
+
+This will:
+- Initialize a Waterworld environment with two agents
+- Use the LLM agent for pursuer_0 and random actions for pursuer_1
+- Track regret for both agents
+- Log all LLM interactions to `models/llm_agents/logs/`
+
+The agent uses the Hugging Face Inference API to generate actions based on the current state of the environment. All interactions are logged for analysis.
+
 ## Setup
 
 1. Clone the repository:
