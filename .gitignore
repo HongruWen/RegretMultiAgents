@@ -1,0 +1,47 @@
+# Python virtual environment
+env/
+venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment variables
+.env
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Logs
+*.log
+models/llm_agents/logs/
+
+# Model files
+# Ignore all model files by default
+models/**/*.zip
+models/**/*.npz
+# But track specific files in rl_baseline
+!models/rl_baseline/*.zip
+!models/rl_baseline/*.npz
+
+# Results directories
+# Ignore all results by default
+results/
+regrets/**/results/
+# But track RL baseline results
+!regrets/baselines/results/
+!regrets/baselines/results/*.png
+!regrets/baselines/results/*.npz
+!regrets/baselines/results/*.txt 
