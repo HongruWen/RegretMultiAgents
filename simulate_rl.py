@@ -1,82 +1,105 @@
 import numpy as np
 from pettingzoo.sisl import waterworld_v4
-from regrets.baselines.rl_policy import RLPolicyBaseline
-import time
+import json
+import os
+from regrets.dynamic_regret import calculate_episode_dynamic_regret
 
-def simulate_rl_policy():
-    # Create the environment with human rendering mode
-    env = waterworld_v4.env(render_mode="human")
-    
-    # Reset the environment with a fixed seed for reproducibility
+def run_simulation(n_steps=1000, render_mode=None):
+    """Run simulation with random actions and track performance."""
+    env = waterworld_v4.env(render_mode=render_mode)
     env.reset(seed=42)
-    
-    # Initialize the RL policy baseline with the trained model
-    baseline = RLPolicyBaseline(
-        action_dim=2,
-        algorithm="PPO",
-        model_path="models/rl_baseline/waterworld_ppo",
-        env_config={
-            "render_mode": "human",
-            "max_cycles": 1000,
-        },
-        device="auto"
-    )
-    
-    # Main simulation loop
-    episode_rewards = {agent: 0 for agent in env.agents}
+
+    # Initialize tracking dictionaries for each agent
+    episode_data = {agent: {
+        'rewards': [],
+        'actions': [],
+        'total_reward': 0.0,
+        'food_collected': 0,
+        'poison_collisions': 0,
+        'negative_rewards': []  # Track negative rewards for regret calculation
+    } for agent in env.agents}
+
+    # Track rewards at checkpoints
+    checkpoints = {}
+    checkpoint_interval = n_steps // 10
     step_count = 0
-    max_steps = 1000
-    
-    print("Starting simulation...")
-    print("pursuer_0: Using trained RL policy")
-    print("pursuer_1: Using random actions")
-    print("Press Ctrl+C to stop the simulation")
-    
-    try:
+
+    for _ in range(n_steps):
         for agent in env.agent_iter():
-            # Get the current observation, reward, termination status, and info
             observation, reward, termination, truncation, info = env.last()
+            reward = float(reward)  # Convert to Python float
             
-            # Update episode rewards
-            episode_rewards[agent] += reward
+            # Track reward
+            episode_data[agent]['rewards'].append(reward)
+            episode_data[agent]['total_reward'] += reward
             
-            # If the agent is done or we've reached max steps, skip action
-            if termination or truncation or step_count >= max_steps:
+            # Track negative rewards for regret calculation
+            if reward < 0:
+                episode_data[agent]['negative_rewards'].append(abs(reward))
+            
+            # Track food and poison stats from info
+            if info.get('food_collected', 0) > 0:
+                episode_data[agent]['food_collected'] += 1
+            if info.get('poison_collision', 0) > 0:
+                episode_data[agent]['poison_collisions'] += 1
+
+            # Random action
+            if termination or truncation:
                 action = None
             else:
-                # Use RL policy for pursuer_0, random actions for pursuer_1
-                if agent == "pursuer_0":
-                    action = baseline.get_action(observation)
-                else:  # pursuer_1
-                    action = env.action_space(agent).sample()
+                action = env.action_space(agent).sample()
+                episode_data[agent]['actions'].append(action)
             
-            # Step the environment
             env.step(action)
-            
-            # Increment step counter
             step_count += 1
-            
-            # Print progress every 100 steps
-            if step_count % 100 == 0:
-                print(f"\nStep {step_count}")
-                for agent_id, total_reward in episode_rewards.items():
-                    policy = "RL Policy" if agent_id == "pursuer_0" else "Random"
-                    print(f"{agent_id} ({policy}) - Total Reward: {total_reward:.4f}")
-            
-            # Add a small delay to make the visualization more watchable
-            time.sleep(0.01)
-            
-    except KeyboardInterrupt:
-        print("\nSimulation stopped by user")
-    
-    # Close the environment when done
+
+            # Save checkpoint data after all agents have acted
+            if step_count % checkpoint_interval == 0:
+                checkpoint = {}
+                for agent_id in env.agents:
+                    checkpoint[agent_id] = {
+                        'total_reward': float(episode_data[agent_id]['total_reward']),
+                        'food_collected': episode_data[agent_id]['food_collected'],
+                        'poison_collisions': episode_data[agent_id]['poison_collisions'],
+                        'regret_so_far': float(sum(episode_data[agent_id]['negative_rewards']))
+                    }
+                checkpoints[f'step_{step_count}'] = checkpoint
+
+    # Calculate final regrets
+    final_regrets = {
+        agent: float(sum(data['negative_rewards']))
+        for agent, data in episode_data.items()
+    }
+
+    # Prepare final results
+    results = {
+        'checkpoints': checkpoints,
+        'final_stats': {
+            agent: {
+                'total_reward': float(data['total_reward']),
+                'food_collected': data['food_collected'],
+                'poison_collisions': data['poison_collisions'],
+                'dynamic_regret': final_regrets[agent]
+            }
+            for agent, data in episode_data.items()
+        }
+    }
+
+    # Save results
+    os.makedirs('results', exist_ok=True)
+    with open('results/simulation_results.json', 'w') as f:
+        json.dump(results, f, indent=4)
+
     env.close()
-    
-    # Final statistics
-    print("\nFinal Statistics:")
-    for agent_id, total_reward in episode_rewards.items():
-        policy = "RL Policy" if agent_id == "pursuer_0" else "Random"
-        print(f"{agent_id} ({policy}) - Final Total Reward: {total_reward:.4f}")
+    return results
 
 if __name__ == "__main__":
-    simulate_rl_policy() 
+    results = run_simulation()
+    print("\nSimulation completed. Results saved to results/simulation_results.json")
+    print("\nFinal Statistics:")
+    for agent, stats in results['final_stats'].items():
+        print(f"\n{agent}:")
+        print(f"Total Reward: {stats['total_reward']:.4f}")
+        print(f"Food Collected: {stats['food_collected']}")
+        print(f"Poison Collisions: {stats['poison_collisions']}")
+        print(f"Dynamic Regret: {stats['dynamic_regret']:.4f}") 
