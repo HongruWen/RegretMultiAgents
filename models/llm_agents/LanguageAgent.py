@@ -4,7 +4,10 @@ from langchain.schema import HumanMessage, SystemMessage
 
 import inspect
 
-class GymnasiumAgent:
+class RawAgent:
+    """
+    A language model agent that can act in the Waterworld environment.
+    """
     @classmethod
     def get_docs(cls, env):
         return env.unwrapped.__doc__
@@ -84,6 +87,9 @@ Return: {self.ret}
         return action
 
 class WaterworldAgent(GymnasiumAgent):
+    """
+    Extend the RawAgent class to handle multi-agents setting in Waterworld.
+    """
     @classmethod
     def get_docs(cls, env):
         return inspect.getmodule(env.unwrapped).__doc__
