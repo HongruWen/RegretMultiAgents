@@ -56,6 +56,39 @@ This will:
 
 The agent uses the Hugging Face Inference API to generate actions based on the current state of the environment. All interactions are logged for analysis.
 
+### Event-Triggered Inference
+
+To reduce computational load and inference time, the LLM agent supports an event-triggered mode. In this mode, the LLM is only called when significant events occur in the environment, rather than at every timestep.
+
+Events that can trigger an LLM inference:
+- Food or poison coming within a threshold distance
+- A collision with food or poison 
+- A significant change in position or reward
+- A minimum number of steps has passed since the last inference
+
+To run the simulation with event-triggered inference:
+
+```bash
+python models/llm_agents/run_llm_agent.py --event_triggered
+```
+
+Additional parameters for fine-tuning event detection:
+```bash
+python models/llm_agents/run_llm_agent.py --event_triggered \
+  --food_threshold 0.3 \
+  --poison_threshold 0.2 \
+  --reward_threshold 0.05 \
+  --min_steps 10
+```
+
+Parameter descriptions:
+- `--food_threshold`: Distance threshold for nearby food (default: 0.2)
+- `--poison_threshold`: Distance threshold for nearby poison (default: 0.2)
+- `--reward_threshold`: Significant reward threshold (default: 0.1)
+- `--min_steps`: Minimum steps between LLM calls (default: 5)
+
+When using event-triggered inference, the simulation will report statistics about how frequently the LLM is being called compared to the total number of environment steps.
+
 ## Setup
 
 1. Clone the repository:
