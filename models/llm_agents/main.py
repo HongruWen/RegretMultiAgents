@@ -4,7 +4,7 @@ from LanguageAgent import WaterworldAgent, RawAgent
 
 
 def main(agents, env, planning_horizon=5):
-    observations, infos = env.reset()
+    env.reset()
 
     # Initialize agents with environment docs and instructions
     for name, agent in agents.items():
@@ -15,22 +15,22 @@ def main(agents, env, planning_horizon=5):
     while env.agents:
         if not warm_up:
             # Get plans for all agents
-            plans = {agent: agent.plan() for agent in env.agents}
+            plans = {agent: agent.plan() for name, agent in agents.items()}
             
             # Execute the planning horizon steps
             for step in range(planning_horizon):
                 # Get current actions for all agents
-                actions = {agent: plans[agent][step] for agent in env.agents}
+                actions = {agent: plans[agent][step] for name, agent in agents.items()}
                 
                 # Add actions to history before executing them
-                for agent in env.agents:
+                for name, agent in agents.items():
                     agent.add_act_to_history()
                 
                 # Execute the step
                 observations, rewards, terminations, truncations, infos = env.step(actions)
                 
                 # Add observations to history
-                for agent in env.agents:
+                for name, agent in agents.items():
                     agent.observe(
                         observations[agent], 
                         rewards[agent], 
@@ -41,15 +41,15 @@ def main(agents, env, planning_horizon=5):
                 
                 # Print current state
                 print(f"Step {step + 1}:")
-                for agent in env.agents:
+                for name, agent in agents.items():
                     print(f"  {agent}: Action={actions[agent]}, Reward={rewards[agent]}")
             
             # Reset planning state for next planning horizon
-            for agent in env.agents:
+            for name, agent in agents.items():
                 agent.reset_plan()
         else:
             # Warm-up phase
-            for agent in env.agents:
+            for name, agent in agents.items():
                 agent.observe(observations[agent])
             print("Warm-up phase completed")
             warm_up = False
