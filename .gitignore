@@ -1,6 +1,7 @@
-# Python virtual environment
-env/
+# Python virtual environments
+regret/
 venv/
+env/
 
 # Python cache files
 __pycache__/
@@ -13,16 +14,13 @@ build/
 *.egg-info/
 
 # IDE specific files
-.idea/
 .vscode/
+.idea/
 *.swp
 *.swo
 
 # Environment variables
 .env
-
-# Jupyter Notebook
-.ipynb_checkpoints
 
 # Logs
 *.log

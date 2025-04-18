@@ -1,10 +1,13 @@
-numpy>=1.21.0
-matplotlib>=3.4.0
-pettingzoo>=1.22.0
-pygame>=2.5.0
-pymunk>=6.0.0
-scipy>=1.7.0
-torch>=2.0.0
-stable-baselines3>=2.0.0
-gymnasium>=0.29.0
-tqdm>=4.65.0 
+# Core dependencies
+pettingzoo[sisl]>=1.24.1  # For WaterWorld environment
+langchain>=0.1.0  # For LLM interaction framework
+tenacity>=8.2.3  # For retry logic
+
+# Hugging Face dependencies
+transformers>=4.36.0  # For model loading and tokenization
+torch>=2.1.0  # PyTorch for model inference
+accelerate>=0.25.0  # For efficient model loading
+bitsandbytes>=0.41.0  # For model quantization (optional but recommended)
+
+# Additional dependencies
+numpy>=1.24.0  # Required for array operations 
