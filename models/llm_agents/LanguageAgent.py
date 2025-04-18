@@ -12,10 +12,12 @@ class RawAgent:
     def get_docs(cls, env):
         return env.unwrapped.__doc__
 
-    def __init__(self, model, env):
+    def __init__(self, model, env, planning_horizon=5):
         self.model = model
         self.env = env
         self.docs = self.get_docs(env)
+        self.planning_horizon = planning_horizon
+        self.plan_sequence = []
 
         self.instructions = """
 Your goal is to maximize your return, i.e. the sum of the rewards you receive.
@@ -39,7 +41,7 @@ Do nothing else but return the action.
         )
 
         self.message_history = []
-        self.ret = 0
+        self.reward_total = 0
 
     def random_action(self):
         action = self.env.action_space.sample()
@@ -51,15 +53,15 @@ Do nothing else but return the action.
             SystemMessage(content=self.instructions),
         ]
 
-    def observe(self, obs, rew=0, term=False, trunc=False, info=None):
-        self.ret += rew
+    def observe(self, obs, reward=0, term=False, trunc=False, info=None):
+        self.reward_total += reward
 
         obs_message = f"""
 Observation: {obs}
-Reward: {rew}
+Reward: {reward}
 Termination: {term}
 Truncation: {trunc}
-Return: {self.ret}
+Return: {self.reward_total}
         """
         self.message_history.append(HumanMessage(content=obs_message))
         return obs_message
@@ -85,6 +87,12 @@ Return: {self.ret}
         except tenacity.RetryError as e:  # noqa: F841
             action = self.random_action()
         return action
+    
+    def plan(self):
+        pass
+    
+    def reset_plan(self):
+        self.plan_sequence = []
 
 class WaterworldAgent(GymnasiumAgent):
     """
@@ -94,8 +102,8 @@ class WaterworldAgent(GymnasiumAgent):
     def get_docs(cls, env):
         return inspect.getmodule(env.unwrapped).__doc__
 
-    def __init__(self, name, model, env):
-        super().__init__(model, env)
+    def __init__(self, name, model, env, planning_horizon=5):
+        super().__init__(model, env, planning_horizon)
         self.name = name
 
     def random_action(self):
