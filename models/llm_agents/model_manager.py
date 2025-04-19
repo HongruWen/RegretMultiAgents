@@ -1,15 +1,15 @@
 from typing import Dict, List, Optional, Iterator
-from langchain_community.llms import HuggingFacePipeline
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-import torch
+from langchain_huggingface import HuggingFaceEndpoint
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+import os
 
 class ModelManager:
     """Manages different language models from Hugging Face."""
     
     def __init__(self):
-        self.models: Dict[str, HuggingFacePipeline] = {}
+        self.models: Dict[str, HuggingFaceEndpoint] = {}
         self.model_configs: Dict[str, Dict] = {}
-        self.iterator: Optional[Iterator[HuggingFacePipeline]] = None
+        self.iterator: Optional[Iterator[HuggingFaceEndpoint]] = None
         
     def add_model(self, 
                  name: str, 
@@ -28,30 +28,21 @@ class ModelManager:
         """
         print(f"Loading model {model_id}...")
         
-        # Load tokenizer and model
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
-        
-        # Load model to CPU
-        model = AutoModelForCausalLM.from_pretrained(
-            model_id,
-            torch_dtype=torch.float32
+        # Create HuggingFaceEndpoint instance
+        llm = HuggingFaceEndpoint(
+            endpoint_url=f"https://api-inference.huggingface.co/models/{model_id}",
+            huggingfacehub_api_token=os.environ["HUGGINGFACEHUB_API_TOKEN"],
+            task="text-generation",
+            inference_kwargs={
+                "temperature": temperature,
+                "max_new_tokens": max_length,
+                "do_sample": True,
+                "return_full_text": False,
+                "top_p": 0.9,
+                "repetition_penalty": 1.1,
+                "stop": ["</s>", "Human:", "Assistant:"]
+            }
         )
-        
-        print("Model loaded on CPU")
-        
-        # Create pipeline
-        pipe = pipeline(
-            "text-generation",
-            model=model,
-            tokenizer=tokenizer,
-            max_length=max_length,
-            temperature=temperature,
-            batch_size=batch_size,
-            do_sample=True  # Enable sampling when temperature > 0
-        )
-        
-        # Create LangChain wrapper
-        llm = HuggingFacePipeline(pipeline=pipe)
         
         # Store model and config
         self.models[name] = llm
@@ -67,11 +58,11 @@ class ModelManager:
         
         print(f"Model {name} loaded successfully")
     
-    def get_model(self, name: str) -> Optional[HuggingFacePipeline]:
+    def get_model(self, name: str) -> Optional[HuggingFaceEndpoint]:
         """Get a model by name."""
         return self.models.get(name)
     
-    def get_next_model(self) -> HuggingFacePipeline:
+    def get_next_model(self) -> HuggingFaceEndpoint:
         """Get the next model in the round-robin sequence."""
         if not self.models:
             raise ValueError("No models available")
@@ -89,7 +80,7 @@ class ModelManager:
         """Reset the model iterator."""
         self.iterator = iter(self.models.values())
     
-    def get_model_iterator(self) -> Iterator[HuggingFacePipeline]:
+    def get_model_iterator(self) -> Iterator[HuggingFaceEndpoint]:
         """Get an iterator over all models."""
         return iter(self.models.values())
     

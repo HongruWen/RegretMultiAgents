@@ -4,6 +4,7 @@ from langchain.schema import HumanMessage, SystemMessage, AIMessage
 
 import inspect
 import numpy as np
+import re
 
 class RawAgent:
     """
@@ -35,12 +36,11 @@ Return: <sum_of_rewards>
 You will respond with a sequence of {planning_horizon} actions, formatted as:
 
 Action Sequence: [[x1, y1], [x2, y2], ..., [x{planning_horizon}, y{planning_horizon}]]
+Replace x's and y's with the actual numerical values that satisfy the environment's action space while maximizing the return.
 
-where each action is a 2D vector with values between -1 and 1.
-x controls horizontal movement (-1 is left, 1 is right)
-y controls vertical movement (-1 is up, 1 is down)
+For example:
+Action Sequence: [[-0.5, 0.7], [0.2, -0.3], [0.8, 0.1], [-0.4, -0.6], [0.1, 0.9]]  when planning_horizon = 5
 
-Your goal is to catch green circles (food +10) and avoid red circles (poison -1).
 Do nothing else but return the action sequence.
 """
         self.action_parser = RegexParser(
@@ -77,62 +77,98 @@ Return: {self.reward_total}
         return obs_message
 
     def _format_messages_to_prompt(self):
-        """Convert message history to a single prompt string."""
-        formatted_messages = []
-        
-        for message in self.message_history:
-            if isinstance(message, SystemMessage):
-                formatted_messages.append(f"System: {message.content}")
-            elif isinstance(message, HumanMessage):
-                formatted_messages.append(f"Human: {message.content}")
-            elif isinstance(message, AIMessage):
-                formatted_messages.append(f"AI: {message.content}")
-        
-        return "\n\n".join(formatted_messages)
+        """Convert message history to a list of chat messages."""
+        return self.message_history
 
     def _act(self):
-        # Convert message history to a single prompt string
-        prompt = self._format_messages_to_prompt()
+        # Get completion from the model using chat format
+        response = self.model.invoke(self.message_history)
         
-        # Get completion from the model
-        response = self.model(prompt)
+        # Print the raw response from the model
+        print("\n--- Raw LLM Response ---")
+        print(response)  # response is already a string
         
-        # Parse the action sequence from the response
-        action_sequence_str = self.action_parser.parse(response)["action_sequence"]
-        
-        # Process the string to extract 2D actions
-        # First, replace whitespace and clean up the string
-        cleaned_str = action_sequence_str.replace(" ", "").replace("\n", "")
-        
-        # Split the string into individual action pairs
-        action_pairs = cleaned_str.split("],[")
-        
-        # Clean up the brackets
-        action_pairs = [pair.replace("[", "").replace("]", "") for pair in action_pairs]
-        
-        # Convert to numpy arrays
-        action_sequence = []
-        
-        for pair in action_pairs:
-            try:
-                # Split by comma and convert to float
-                x, y = pair.split(",")
-                action = np.array([float(x), float(y)], dtype=np.float32)
+        try:
+            # Parse the action sequence from the response
+            action_sequence_str = self.action_parser.parse(response)["action_sequence"]
+            
+            # Print the parsed action sequence string
+            # print("\n--- Parsed Action Sequence String ---")
+            # print(action_sequence_str)
+            
+            # Process the string to extract 2D actions
+            # Use regex to find all coordinate pairs
+            # This pattern looks for pairs of numbers inside brackets: [num, num]
+            pattern = r'\[([-+]?[0-9]*\.?[0-9]+),\s*([-+]?[0-9]*\.?[0-9]+)\]'
+            matches = re.findall(pattern, action_sequence_str)
+            
+            # print(f"Found {len(matches)} valid coordinate pairs")
+            
+            # Convert to numpy arrays
+            action_sequence = []
+            
+            if matches:
+                for x_str, y_str in matches:
+                    try:
+                        x = float(x_str)
+                        y = float(y_str)
+                        action = np.array([x, y], dtype=np.float32)
+                        
+                        # Clip values to [-1, 1] range
+                        action = np.clip(action, -1.0, 1.0)
+                        action_sequence.append(action)
+                    except ValueError as e:
+                        # print(f"Error converting to float: {x_str}, {y_str}. Error: {e}")
+                        action_sequence.append(self.random_action())
+            
+            # If no valid pairs were found, fall back to old method
+            if not action_sequence:
+                # print("No valid coordinate pairs found. Trying fallback parsing method...")
                 
-                # Clip values to [-1, 1] range
-                action = np.clip(action, -1.0, 1.0)
-                action_sequence.append(action)
-            except (ValueError, IndexError):
-                # If parsing fails, use a random action
-                action_sequence.append(self.random_action())
+                # Clean up and extract action pairs
+                cleaned_str = action_sequence_str.replace(" ", "").replace("\n", "")
+                # Replace placeholder text
+                cleaned_str = re.sub(r'x\d+', '0', cleaned_str)  # Replace x1, x2, etc. with 0
+                cleaned_str = re.sub(r'y\d+', '0', cleaned_str)  # Replace y1, y2, etc. with 0
+                cleaned_str = re.sub(r'\.\.\.,', '', cleaned_str)  # Remove ellipsis
+                
+                # Split the string into individual action pairs
+                action_pairs = cleaned_str.split("],[")
+                # Clean up the brackets
+                action_pairs = [pair.replace("[", "").replace("]", "") for pair in action_pairs]
+                
+                for pair in action_pairs:
+                    try:
+                        x, y = pair.split(",")
+                        x = float(x)
+                        y = float(y)
+                        action = np.array([x, y], dtype=np.float32)
+                        action = np.clip(action, -1.0, 1.0)
+                        action_sequence.append(action)
+                    except (ValueError, IndexError) as e:
+                        # print(f"Fallback parsing failed for: {pair}. Error: {e}")
+                        action_sequence.append(self.random_action())
+        except Exception as e:
+            print(f"Error parsing LLM response: {e}")
+            # print(f"Full response that failed to parse: {response}")
+            # Generate random actions if parsing completely fails
+            action_sequence = []
         
         # If we didn't get enough actions, pad with random actions
-        while len(action_sequence) < self.planning_horizon:
-            action_sequence.append(self.random_action())
+        if len(action_sequence) < self.planning_horizon:
+            # print(f"Not enough actions ({len(action_sequence)}), padding with random actions")
+            while len(action_sequence) < self.planning_horizon:
+                action_sequence.append(self.random_action())
             
         # If we got too many actions, truncate
         if len(action_sequence) > self.planning_horizon:
+            # print(f"Too many actions ({len(action_sequence)}), truncating to {self.planning_horizon}")
             action_sequence = action_sequence[:self.planning_horizon]
+        
+        # Print final processed action sequence
+        # print("\n--- Final Processed Actions ---")
+        # for i, action in enumerate(action_sequence):
+        #     print(f"Action {i+1}: [{action[0]:.4f}, {action[1]:.4f}]")
         
         return action_sequence
 
@@ -148,11 +184,13 @@ Return: {self.reward_total}
             ):
                 with attempt:
                     action_sequence = self._act()
-                    if len(action_sequence) != self.planning_horizon:
-                        raise ValueError(f"Expected {self.planning_horizon} actions, got {len(action_sequence)}")
-                    return action_sequence
+                    if len(action_sequence) == 0:
+                        raise ValueError("No valid actions returned")
+                    # Return the first action from the sequence
+                    return action_sequence[0]
         except tenacity.RetryError as e:  # noqa: F841
-            return [self.random_action() for _ in range(self.planning_horizon)]
+            # Return a random action if all attempts failed
+            return self.random_action()
     
     def plan(self):
         # Get a sequence of actions from the model
