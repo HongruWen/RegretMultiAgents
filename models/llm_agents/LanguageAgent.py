@@ -3,6 +3,7 @@ from langchain.output_parsers import RegexParser
 from langchain.schema import HumanMessage, SystemMessage, AIMessage
 
 import inspect
+import numpy as np
 
 class RawAgent:
     """
@@ -33,9 +34,13 @@ Return: <sum_of_rewards>
 
 You will respond with a sequence of {planning_horizon} actions, formatted as:
 
-Action Sequence: [<action1>, <action2>, ..., <action{planning_horizon}>]
+Action Sequence: [[x1, y1], [x2, y2], ..., [x{planning_horizon}, y{planning_horizon}]]
 
-where each <action> is a valid action for the environment.
+where each action is a 2D vector with values between -1 and 1.
+x controls horizontal movement (-1 is left, 1 is right)
+y controls vertical movement (-1 is up, 1 is down)
+
+Your goal is to catch green circles (food +10) and avoid red circles (poison -1).
 Do nothing else but return the action sequence.
 """
         self.action_parser = RegexParser(
@@ -47,8 +52,8 @@ Do nothing else but return the action sequence.
         self.message_history = []
 
     def random_action(self):
-        action = self.env.action_space.sample()
-        return action
+        # Generate a random 2D action vector
+        return np.random.uniform(-1.0, 1.0, (2,)).astype(np.float32)
 
     def reset(self):
         """Initialize the agent with environment docs and instructions. 
@@ -71,11 +76,64 @@ Return: {self.reward_total}
         self.message_history.append(HumanMessage(content=obs_message))
         return obs_message
 
+    def _format_messages_to_prompt(self):
+        """Convert message history to a single prompt string."""
+        formatted_messages = []
+        
+        for message in self.message_history:
+            if isinstance(message, SystemMessage):
+                formatted_messages.append(f"System: {message.content}")
+            elif isinstance(message, HumanMessage):
+                formatted_messages.append(f"Human: {message.content}")
+            elif isinstance(message, AIMessage):
+                formatted_messages.append(f"AI: {message.content}")
+        
+        return "\n\n".join(formatted_messages)
+
     def _act(self):
-        act_message = self.model(self.message_history)
-        action_sequence_str = self.action_parser.parse(act_message.content)["action_sequence"]
-        # Convert the string of actions into a list of actions
-        action_sequence = [int(action.strip()) for action in action_sequence_str.split(',')]
+        # Convert message history to a single prompt string
+        prompt = self._format_messages_to_prompt()
+        
+        # Get completion from the model
+        response = self.model(prompt)
+        
+        # Parse the action sequence from the response
+        action_sequence_str = self.action_parser.parse(response)["action_sequence"]
+        
+        # Process the string to extract 2D actions
+        # First, replace whitespace and clean up the string
+        cleaned_str = action_sequence_str.replace(" ", "").replace("\n", "")
+        
+        # Split the string into individual action pairs
+        action_pairs = cleaned_str.split("],[")
+        
+        # Clean up the brackets
+        action_pairs = [pair.replace("[", "").replace("]", "") for pair in action_pairs]
+        
+        # Convert to numpy arrays
+        action_sequence = []
+        
+        for pair in action_pairs:
+            try:
+                # Split by comma and convert to float
+                x, y = pair.split(",")
+                action = np.array([float(x), float(y)], dtype=np.float32)
+                
+                # Clip values to [-1, 1] range
+                action = np.clip(action, -1.0, 1.0)
+                action_sequence.append(action)
+            except (ValueError, IndexError):
+                # If parsing fails, use a random action
+                action_sequence.append(self.random_action())
+        
+        # If we didn't get enough actions, pad with random actions
+        while len(action_sequence) < self.planning_horizon:
+            action_sequence.append(self.random_action())
+            
+        # If we got too many actions, truncate
+        if len(action_sequence) > self.planning_horizon:
+            action_sequence = action_sequence[:self.planning_horizon]
+        
         return action_sequence
 
     def act(self):
@@ -106,7 +164,7 @@ Return: {self.reward_total}
     def add_act_to_history(self):
         if self.plan_sequence and self.current_step < len(self.plan_sequence):
             action = self.plan_sequence[self.current_step]
-            self.message_history.append(AIMessage(content=f"Action: {action}"))
+            self.message_history.append(AIMessage(content=f"Action: [{action[0]:.4f}, {action[1]:.4f}]"))
             self.current_step += 1
     
     def reset_plan(self):
@@ -114,7 +172,7 @@ Return: {self.reward_total}
         self.plan_sequence = []
         self.current_step = 0
 
-class WaterworldAgent(GymnasiumAgent):
+class WaterworldAgent(RawAgent):
     """
     Extend the RawAgent class to handle multi-agents setting in Waterworld.
     """

@@ -1,26 +1,46 @@
+import numpy as np
 from model_manager import ModelManager
 from LanguageAgent import WaterworldAgent, RawAgent
 
 
 
 def main(agents, env, planning_horizon=5):
+    print("\n=== Starting Simulation ===")
     env.reset()
+    print(f"Environment reset. Number of agents: {len(env.agents)}")
 
     # Initialize agents with environment docs and instructions
+    print("\nInitializing agents...")
     for name, agent in agents.items():
         agent.reset()
+        print(f"Agent {name} initialized")
 
-    warm_up = True
+    warm_up = False
+    print("\n=== Starting Warm-up Phase ===")
 
     while env.agents:
         if not warm_up:
+            print(f"\n=== Planning Horizon {planning_horizon} steps ===")
             # Get plans for all agents
-            plans = {agent: agent.plan() for name, agent in agents.items()}
+            plans = {}
+            for name, agent in agents.items():
+                print(f"\nAgent {name} planning...")
+                plans[name] = agent.plan()
+                print(f"Agent {name} plan: {plans[name]}")
             
             # Execute the planning horizon steps
             for step in range(planning_horizon):
+                print(f"\n--- Step {step + 1}/{planning_horizon} ---")
                 # Get current actions for all agents
-                actions = {agent: plans[agent][step] for name, agent in agents.items()}
+                actions = {}
+                for name in agents.keys():
+                    # Ensure action is a numpy array with the right type
+                    action = plans[name][step]
+                    if not isinstance(action, np.ndarray):
+                        action = np.array(action, dtype=np.float32)
+                    actions[name] = action
+                
+                print(f"Actions: {actions}")
                 
                 # Add actions to history before executing them
                 for name, agent in agents.items():
@@ -28,36 +48,37 @@ def main(agents, env, planning_horizon=5):
                 
                 # Execute the step
                 observations, rewards, terminations, truncations, infos = env.step(actions)
+                print(f"Rewards: {rewards}")
+                print(f"Terminations: {terminations}")
                 
                 # Add observations to history
                 for name, agent in agents.items():
                     agent.observe(
-                        observations[agent], 
-                        rewards[agent], 
-                        terminations[agent], 
-                        truncations[agent], 
-                        infos[agent]
+                        observations[name], 
+                        rewards[name], 
+                        terminations[name], 
+                        truncations[name], 
+                        infos[name]
                     )
-                
-                # Print current state
-                print(f"Step {step + 1}:")
-                for name, agent in agents.items():
-                    print(f"  {agent}: Action={actions[agent]}, Reward={rewards[agent]}")
             
             # Reset planning state for next planning horizon
+            print("\nResetting planning state...")
             for name, agent in agents.items():
                 agent.reset_plan()
         else:
             # Warm-up phase
+            print("\nWarm-up phase...")
             for name, agent in agents.items():
-                agent.observe(observations[agent])
+                agent.observe(observations[name])
             print("Warm-up phase completed")
             warm_up = False
     
+    print("\n=== Simulation Completed ===")
     env.close()
 
 
 def waterworld():
+    print("Setting up WaterWorld environment...")
     from pettingzoo.sisl import waterworld_v4
     env = waterworld_v4.env(
         n_pursuers=2,
@@ -82,30 +103,37 @@ def waterworld():
         max_cycles=10, # default is 100, set to 10 for testing
         render_mode='human'
     )
+    print("Environment created successfully")
 
     # Initialize model manager
+    print("\nInitializing Model Manager...")
     model_manager = ModelManager()
     
-    # Add models (you can add more models as needed)
+    # Add models
+    print("\nAdding models to manager...")
     model_manager.add_model(
-        name="mistral-7b",
-        model_id="mistralai/Mistral-7B-v0.1",
-        temperature=0.2
+        name="opt-125m",
+        model_id="facebook/opt-125m",
+        temperature=0.7
     )
+    print("Added OPT-125M model")
     
-    model_manager.add_model(
-        name="llama2-7b",
-        model_id="meta-llama/Llama-2-7b-chat-hf",
-        temperature=0.2
-    )
+    # model_manager.add_model(
+    #     name="llama2-7b",
+    #     model_id="meta-llama/Llama-2-7b-chat-hf",
+    #     temperature=0.2
+    # )
+    # print("Added Llama2-7B model")
     
-    model_manager.add_model(
-        name="zephyr-7b",
-        model_id="HuggingFaceH4/zephyr-7b-beta",
-        temperature=0.2
-    )
+    # model_manager.add_model(
+    #     name="zephyr-7b",
+    #     model_id="HuggingFaceH4/zephyr-7b-beta",
+    #     temperature=0.2
+    # )
+    # print("Added Zephyr-7B model")
     
     # Create agents using a round-robin assignment of models
+    print("\nCreating agents...")
     planning_horizon = 5
     agents = {}
     
@@ -127,6 +155,7 @@ def waterworld():
                 print(f"Agent {agent_name} using model: {model_name}")
                 break
     
+    print("\nStarting main simulation loop...")
     main(agents, env, planning_horizon)
 
 if __name__ == "__main__":

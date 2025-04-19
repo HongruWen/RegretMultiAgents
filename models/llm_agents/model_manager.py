@@ -1,8 +1,7 @@
 from typing import Dict, List, Optional, Iterator
-from langchain.llms import HuggingFacePipeline
+from langchain_community.llms import HuggingFacePipeline
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 import torch
-import itertools
 
 class ModelManager:
     """Manages different language models from Hugging Face."""
@@ -10,12 +9,11 @@ class ModelManager:
     def __init__(self):
         self.models: Dict[str, HuggingFacePipeline] = {}
         self.model_configs: Dict[str, Dict] = {}
-        self._model_iterator = None
+        self.iterator: Optional[Iterator[HuggingFacePipeline]] = None
         
     def add_model(self, 
                  name: str, 
                  model_id: str, 
-                 device: str = "cuda" if torch.cuda.is_available() else "cpu",
                  temperature: float = 0.2,
                  max_length: int = 512,
                  batch_size: int = 1) -> None:
@@ -24,18 +22,22 @@ class ModelManager:
         Args:
             name: Unique identifier for the model
             model_id: Hugging Face model ID
-            device: Device to run the model on
             temperature: Sampling temperature
             max_length: Maximum sequence length
             batch_size: Batch size for inference
         """
+        print(f"Loading model {model_id}...")
+        
         # Load tokenizer and model
         tokenizer = AutoTokenizer.from_pretrained(model_id)
+        
+        # Load model to CPU
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
-            torch_dtype=torch.float16 if device == "cuda" else torch.float32,
-            device_map="auto" if device == "cuda" else None
+            torch_dtype=torch.float32
         )
+        
+        print("Model loaded on CPU")
         
         # Create pipeline
         pipe = pipeline(
@@ -45,7 +47,7 @@ class ModelManager:
             max_length=max_length,
             temperature=temperature,
             batch_size=batch_size,
-            device=0 if device == "cuda" else -1
+            do_sample=True  # Enable sampling when temperature > 0
         )
         
         # Create LangChain wrapper
@@ -55,7 +57,6 @@ class ModelManager:
         self.models[name] = llm
         self.model_configs[name] = {
             "model_id": model_id,
-            "device": device,
             "temperature": temperature,
             "max_length": max_length,
             "batch_size": batch_size
@@ -63,10 +64,34 @@ class ModelManager:
         
         # Reset iterator when models change
         self._reset_iterator()
+        
+        print(f"Model {name} loaded successfully")
     
     def get_model(self, name: str) -> Optional[HuggingFacePipeline]:
         """Get a model by name."""
         return self.models.get(name)
+    
+    def get_next_model(self) -> HuggingFacePipeline:
+        """Get the next model in the round-robin sequence."""
+        if not self.models:
+            raise ValueError("No models available")
+            
+        if self.iterator is None:
+            self._reset_iterator()
+            
+        try:
+            return next(self.iterator)
+        except StopIteration:
+            self._reset_iterator()
+            return next(self.iterator)
+    
+    def _reset_iterator(self) -> None:
+        """Reset the model iterator."""
+        self.iterator = iter(self.models.values())
+    
+    def get_model_iterator(self) -> Iterator[HuggingFacePipeline]:
+        """Get an iterator over all models."""
+        return iter(self.models.values())
     
     def get_available_models(self) -> List[str]:
         """Get list of available model names."""
@@ -83,46 +108,7 @@ class ModelManager:
         """Clear all models from the manager."""
         self.models.clear()
         self.model_configs.clear()
-        self._reset_iterator()
-    
-    def _reset_iterator(self) -> None:
-        """Reset the model iterator."""
-        if self.models:
-            self._model_iterator = itertools.cycle(self.models.keys())
-        else:
-            self._model_iterator = None
-    
-    def get_next_model(self) -> Optional[HuggingFacePipeline]:
-        """Get the next model in the round-robin sequence.
-        
-        Returns:
-            The next model in the sequence, or None if no models are available.
-        """
-        if not self.models:
-            return None
-            
-        if self._model_iterator is None:
-            self._reset_iterator()
-            
-        next_model_name = next(self._model_iterator)
-        return self.models[next_model_name]
-    
-    def get_model_iterator(self) -> Iterator[HuggingFacePipeline]:
-        """Get an iterator that cycles through all available models.
-        
-        Returns:
-            An iterator that yields models in a round-robin fashion.
-        """
-        # Create a fresh iterator
-        self._reset_iterator()
-        
-        # Return an iterator that yields models
-        while self._model_iterator:
-            try:
-                model_name = next(self._model_iterator)
-                yield self.models[model_name]
-            except StopIteration:
-                return
+        self.iterator = None
 
 # Example usage:
 if __name__ == "__main__":
