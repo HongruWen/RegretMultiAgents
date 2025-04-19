@@ -1,0 +1,56 @@
+[WARNING]: Received an action [ 7.36847460e-03 -9.32796546e-05] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00342779 -0.00474846] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [ 0.002225   -0.00384053] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [ 0.00840537 -0.00430261] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [ 0.00498461 -0.00177309] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00831944  0.00819793] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [ 0.00676724 -0.00767506] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.0071058  -0.00654685] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00841173  0.00236267] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00192512  0.00564444] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [0.00414173 0.00457743] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00473256  0.00400867] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [ 0.00657332 -0.00641945] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00147572  0.006163  ] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [0.00513597 0.00108731] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00988172  0.0061137 ] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00403454 -0.00503219] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00314765  0.00631516] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [ 0.00746594 -0.0006052 ] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00657587  0.00230242] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00938291  0.00781968] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00544705 -0.0037402 ] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [0.00760681 0.00667526] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00022943  0.00467834] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [0.00342517 0.0008864 ] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [ 0.0014346  -0.00775086] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-3.58445616e-05 -7.18957070e-04] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [ 0.00657868 -0.0083122 ] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [ 0.00886371 -0.00267973] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [ 0.0040331  -0.00284482] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [0.00233148 0.00748335] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00985243  0.00126154] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00214851 -0.00140867] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00109834 -0.00820059] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00710831  0.00395635] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [0.0063781  0.00449856] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [0.00914315 0.00631119] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.0056266   0.00282194] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [-0.00328612  0.0099706 ] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [0.00167871 0.00771974] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [ 0.00632066 -0.00656872] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [ 0.00375313 -0.00643919] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [0.00844505 0.00947932] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+[WARNING]: Received an action [0.0049286  0.00880907] that was outside action space Box(-1.0, 1.0, (2,), float32). Environment is clipping to space
+
+Step 500/500
+pursuer_0:
+  Total Reward: 18.1390
+  Current Regret: 15.4662
+  Mean Reward: 9.9814
+pursuer_1:
+  Total Reward: -127.9898
+  Current Regret: 161.5950
+  Mean Reward: 12.6037
+
+Final Statistics:

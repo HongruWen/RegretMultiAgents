@@ -22,9 +22,6 @@ build/
 # Environment variables
 .env
 
-# Logs
-*.log
-models/llm_agents/logs/
 
 # Model files
 # Ignore all model files by default

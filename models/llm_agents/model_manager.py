@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional, Iterator
-from langchain_huggingface import HuggingFaceEndpoint
+from langchain.llms.huggingface_endpoint import HuggingFaceEndpoint
+from huggingface_hub.inference_client import InferenceClient
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 import os
 
@@ -28,20 +29,49 @@ class ModelManager:
         """
         print(f"Loading model {model_id}...")
         
-        # Create HuggingFaceEndpoint instance
-        llm = HuggingFaceEndpoint(
-            endpoint_url=f"https://api-inference.huggingface.co/models/{model_id}",
-            huggingfacehub_api_token=os.environ["HUGGINGFACEHUB_API_TOKEN"],
-            task="text-generation",
-            inference_kwargs={
-                "temperature": temperature,
-                "max_new_tokens": max_length,
-                "do_sample": True,
-                "return_full_text": False,
-                "top_p": 0.9,
-                "repetition_penalty": 1.1,
-                "stop": ["</s>", "Human:", "Assistant:"]
-            }
+        # Create a wrapper class for InferenceClient that is compatible with LangChain
+        class InferenceClientWrapper:
+            def __init__(self, model_id, api_token, temperature, max_new_tokens):
+                self.client = InferenceClient(model=model_id, token=api_token)
+                self.temperature = temperature
+                self.max_new_tokens = max_new_tokens
+                
+            def invoke(self, messages):
+                # Format the prompt from messages
+                if isinstance(messages, list):
+                    prompt = self._format_messages(messages)
+                else:
+                    prompt = messages
+                    
+                # Call the text_generation method directly
+                response = self.client.text_generation(
+                    prompt,
+                    temperature=self.temperature,
+                    max_new_tokens=self.max_new_tokens,
+                    do_sample=True,
+                    return_full_text=False,
+                    top_p=0.9,
+                    repetition_penalty=1.1,
+                )
+                return response
+                
+            def _format_messages(self, messages):
+                formatted = []
+                for msg in messages:
+                    if isinstance(msg, SystemMessage):
+                        formatted.append(f"System: {msg.content}")
+                    elif isinstance(msg, HumanMessage):
+                        formatted.append(f"Human: {msg.content}")
+                    elif isinstance(msg, AIMessage):
+                        formatted.append(f"AI: {msg.content}")
+                return "\n\n".join(formatted)
+        
+        # Create wrapper client
+        llm = InferenceClientWrapper(
+            model_id=model_id,
+            api_token=os.environ["HUGGINGFACEHUB_API_TOKEN"],
+            temperature=temperature,
+            max_new_tokens=max_length
         )
         
         # Store model and config
@@ -58,11 +88,11 @@ class ModelManager:
         
         print(f"Model {name} loaded successfully")
     
-    def get_model(self, name: str) -> Optional[HuggingFaceEndpoint]:
+    def get_model(self, name: str) -> Optional[object]:
         """Get a model by name."""
         return self.models.get(name)
     
-    def get_next_model(self) -> HuggingFaceEndpoint:
+    def get_next_model(self) -> object:
         """Get the next model in the round-robin sequence."""
         if not self.models:
             raise ValueError("No models available")
@@ -80,7 +110,7 @@ class ModelManager:
         """Reset the model iterator."""
         self.iterator = iter(self.models.values())
     
-    def get_model_iterator(self) -> Iterator[HuggingFaceEndpoint]:
+    def get_model_iterator(self) -> Iterator[object]:
         """Get an iterator over all models."""
         return iter(self.models.values())
     

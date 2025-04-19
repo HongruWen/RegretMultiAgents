@@ -1,0 +1,108 @@
+Setting up WaterWorld environment...
+Environment created successfully
+
+Initializing Model Manager...
+
+Adding models to manager...
+Loading model deepseek-ai/DeepSeek-R1-Distill-Qwen-32B...
+WARNING! inference_kwargs is not default parameter.
+                    inference_kwargs was transferred to model_kwargs.
+                    Please make sure that inference_kwargs is what you intended.
+Model deepseek-qwen-32b loaded successfully
+Added DeepSeek-Qwen-32B model
+
+Creating agents...
+Agent pursuer_0 using model: deepseek-qwen-32b
+
+Starting main simulation loop...
+=== Starting Simulation ===
+/mnt/d/CS/RegretMultiAgents/regret/lib/python3.12/site-packages/huggingface_hub/utils/_deprecation.py:131: FutureWarning: 'post' (from 'huggingface_hub.inference._client') is deprecated and will be removed from version '0.31.0'. Making direct POST requests to the inference server is not supported anymore. Please use task methods instead (e.g. `InferenceClient.chat_completion`). If your use case is not supported, please open an issue in https://github.com/huggingface/huggingface_hub.
+  warnings.warn(warning_message, FutureWarning)
+
+--- Raw LLM Response ---
+
+
+
+</think>
+
+Action Sequence: [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]
+/mnt/d/CS/RegretMultiAgents/regret/lib/python3.12/site-packages/huggingface_hub/utils/_deprecation.py:131: FutureWarning: 'post' (from 'huggingface_hub.inference._client') is deprecated and will be removed from version '0.31.0'. Making direct POST requests to the inference server is not supported anymore. Please use task methods instead (e.g. `InferenceClient.chat_completion`). If your use case is not supported, please open an issue in https://github.com/huggingface/huggingface_hub.
+  warnings.warn(warning_message, FutureWarning)
+
+--- Raw LLM Response ---
+
+
+
+</think>
+
+Action Sequence: [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
+/mnt/d/CS/RegretMultiAgents/regret/lib/python3.12/site-packages/huggingface_hub/utils/_deprecation.py:131: FutureWarning: 'post' (from 'huggingface_hub.inference._client') is deprecated and will be removed from version '0.31.0'. Making direct POST requests to the inference server is not supported anymore. Please use task methods instead (e.g. `InferenceClient.chat_completion`). If your use case is not supported, please open an issue in https://github.com/huggingface/huggingface_hub.
+  warnings.warn(warning_message, FutureWarning)
+
+--- Raw LLM Response ---
+
+
+
+</think>
+
+Action Sequence: [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]
+/mnt/d/CS/RegretMultiAgents/regret/lib/python3.12/site-packages/huggingface_hub/utils/_deprecation.py:131: FutureWarning: 'post' (from 'huggingface_hub.inference._client') is deprecated and will be removed from version '0.31.0'. Making direct POST requests to the inference server is not supported anymore. Please use task methods instead (e.g. `InferenceClient.chat_completion`). If your use case is not supported, please open an issue in https://github.com/huggingface/huggingface_hub.
+  warnings.warn(warning_message, FutureWarning)
+
+--- Raw LLM Response ---
+
+
+
+</think>
+
+Action Sequence: [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
+/mnt/d/CS/RegretMultiAgents/regret/lib/python3.12/site-packages/huggingface_hub/utils/_deprecation.py:131: FutureWarning: 'post' (from 'huggingface_hub.inference._client') is deprecated and will be removed from version '0.31.0'. Making direct POST requests to the inference server is not supported anymore. Please use task methods instead (e.g. `InferenceClient.chat_completion`). If your use case is not supported, please open an issue in https://github.com/huggingface/huggingface_hub.
+  warnings.warn(warning_message, FutureWarning)
+
+--- Raw LLM Response ---
+
+
+
+</think>
+
+Action Sequence: [[0.01, 0.01], [0.01, 0.01], [0.01, 0.01], [0.01, 0.01], [0.01, 0.01]]
+/mnt/d/CS/RegretMultiAgents/regret/lib/python3.12/site-packages/huggingface_hub/utils/_deprecation.py:131: FutureWarning: 'post' (from 'huggingface_hub.inference._client') is deprecated and will be removed from version '0.31.0'. Making direct POST requests to the inference server is not supported anymore. Please use task methods instead (e.g. `InferenceClient.chat_completion`). If your use case is not supported, please open an issue in https://github.com/huggingface/huggingface_hub.
+  warnings.warn(warning_message, FutureWarning)
+
+--- Raw LLM Response ---
+
+
+
+</think>
+
+Action Sequence: [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
+/mnt/d/CS/RegretMultiAgents/regret/lib/python3.12/site-packages/huggingface_hub/utils/_deprecation.py:131: FutureWarning: 'post' (from 'huggingface_hub.inference._client') is deprecated and will be removed from version '0.31.0'. Making direct POST requests to the inference server is not supported anymore. Please use task methods instead (e.g. `InferenceClient.chat_completion`). If your use case is not supported, please open an issue in https://github.com/huggingface/huggingface_hub.
+  warnings.warn(warning_message, FutureWarning)
+
+--- Raw LLM Response ---
+
+
+
+</think>
+
+Action Sequence: [[0.01, 0.0], [0.01, 0.0], [0.01, 0.0], [0.01, 0.0], [0.01, 0.0]]
+/mnt/d/CS/RegretMultiAgents/regret/lib/python3.12/site-packages/huggingface_hub/utils/_deprecation.py:131: FutureWarning: 'post' (from 'huggingface_hub.inference._client') is deprecated and will be removed from version '0.31.0'. Making direct POST requests to the inference server is not supported anymore. Please use task methods instead (e.g. `InferenceClient.chat_completion`). If your use case is not supported, please open an issue in https://github.com/huggingface/huggingface_hub.
+  warnings.warn(warning_message, FutureWarning)
+
+--- Raw LLM Response ---
+
+
+
+</think>
+
+Action Sequence: [[0.01, 0.01], [0.01, 0.01], [0.01, 0.01], [0.01, 0.01], [0.01, 0.01]]
+/mnt/d/CS/RegretMultiAgents/regret/lib/python3.12/site-packages/huggingface_hub/utils/_deprecation.py:131: FutureWarning: 'post' (from 'huggingface_hub.inference._client') is deprecated and will be removed from version '0.31.0'. Making direct POST requests to the inference server is not supported anymore. Please use task methods instead (e.g. `InferenceClient.chat_completion`). If your use case is not supported, please open an issue in https://github.com/huggingface/huggingface_hub.
+  warnings.warn(warning_message, FutureWarning)
+
+--- Raw LLM Response ---
+
+
+
+</think>
+
+Action Sequence: [[0.01, 0.01], [0.01, 0.01], [0.01, 0.01], [0.01, 0.01], [0.01, 0.01]]
