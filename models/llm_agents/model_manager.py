@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Iterator
-from langchain.llms.huggingface_endpoint import HuggingFaceEndpoint
-from huggingface_hub.inference_client import InferenceClient
+from langchain_community.llms import HuggingFaceEndpoint
+from huggingface_hub import InferenceClient
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 import os
 

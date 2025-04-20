@@ -6,6 +6,37 @@ import inspect
 import numpy as np
 import re
 
+MAX_TURNS = 4 \
+
+
+
+# -----------------------------------------------------------
+#  Lightweight greedy step: points toward nearest food sensor
+# -----------------------------------------------------------
+def _greedy_direction(obs_array, n_sensors):
+    """Return a tiny thrust vector toward the closest food sensor."""
+    # food distances lie in indices [2*n_sensors : 3*n_sensors)
+    start = 2 * n_sensors
+    end   = 3 * n_sensors
+    dists = obs_array[start:end]
+    if dists.size == 0:
+        return np.zeros(2)
+    idx = int(np.argmin(dists))
+    if dists[idx] >= 1.0:          # no food detected
+        return np.zeros(2)
+    angle = 2 * np.pi * (idx / n_sensors)
+    direction = np.array([np.cos(angle), np.sin(angle)], dtype=np.float32)
+    direction /= np.linalg.norm(direction)
+    return 0.005 * direction       # small safe step (half max_thrust)
+
+
+
+
+
+
+
+
+
 class RawAgent:
     """
     A language model agent that can act in the Waterworld environment.
@@ -65,7 +96,7 @@ Do nothing else but return the action sequence.
 
     def observe(self, obs, reward=0, term=False, trunc=False, info=None):
         self.reward_total += reward
-
+        self.last_obs     = obs
         obs_message = f"""
 Observation: {obs}
 Reward: {reward}
@@ -74,6 +105,14 @@ Truncation: {trunc}
 Return: {self.reward_total}
         """
         self.message_history.append(HumanMessage(content=obs_message))
+        if len(self.message_history) > 2 + 2*MAX_TURNS:
+            # preserve the two system messages and the K most‑recent pairs
+            self.message_history = (
+                self.message_history[:2] +          # docs + instructions
+                self.message_history[-2*MAX_TURNS:]
+            )       
+
+
         return obs_message
 
     def _format_messages_to_prompt(self):
@@ -154,11 +193,15 @@ Return: {self.reward_total}
             # Generate random actions if parsing completely fails
             action_sequence = []
         
-        # If we didn't get enough actions, pad with random actions
+        # change original If we didn't get enough actions, pad with random actions
         if len(action_sequence) < self.planning_horizon:
-            # print(f"Not enough actions ({len(action_sequence)}), padding with random actions")
-            while len(action_sequence) < self.planning_horizon:
-                action_sequence.append(self.random_action())
+           obs_vec = np.asarray(self.last_obs).flatten()
+    # heuristic sensor count from obs length (5 or 8 per sensor)
+           for _ in range(self.planning_horizon - len(action_sequence)):
+               n_feat = obs_vec.size
+               n_s = max(n_feat // 8, n_feat // 5, 1)
+               action_sequence.append(_greedy_direction(obs_vec, n_s))
+
             
         # If we got too many actions, truncate
         if len(action_sequence) > self.planning_horizon:
@@ -169,6 +212,17 @@ Return: {self.reward_total}
         # print("\n--- Final Processed Actions ---")
         # for i, action in enumerate(action_sequence):
         #     print(f"Action {i+1}: [{action[0]:.4f}, {action[1]:.4f}]")
+             
+        # final safety: scale if norm > 0.01 and clip to [-1,1]
+        for i, a in enumerate(action_sequence):
+            norm = np.linalg.norm(a)
+            if norm > 0.01:
+               action_sequence[i] = (a / norm) * 0.01
+            action_sequence[i] = np.clip(action_sequence[i], -1.0, 1.0)
+
+
+
+
         
         return action_sequence
 
